@@ -1,0 +1,304 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style type="text/css">
+    #video {
+        border: 1px solid black;
+    }
+</style>
+<body>
+    <h1>hello</h1>
+    <video id="video" width="300" height="200" autoplay controls  ></video>
+    <canvas id="canvas" width="300" height="200"></canvas>
+    <!-- <img id="screen" height="300" width="300"/>
+    <video id="video1"></video> -->
+    <button id="screen1">screen</button>
+</body>
+<script >
+
+    var websocket
+    var AudioContext = (window.AudioContext) || (window.webkitAudioContext)
+
+    // var audioContext = new AudioContext({
+    //     sampleRate: 16000,
+    // });
+    var loc = window.location
+    var chunks = []
+    var wsStart = 'wss://'
+    var video = document.getElementById("video")
+    
+    var endPoint = wsStart+loc.host+loc.pathname;
+    const mime = ['audio/wav', 'audio/mpeg', 'audio/webm', 'audio/ogg'].filter(MediaRecorder.isTypeSupported)[0];
+    websocket = new WebSocket(endPoint)
+    console.log(websocket.url)
+    var options = {
+        mimeType: "video/webm;codecs=opus, vp8",
+        //bitsPerSecond:5000 //quality
+        };
+
+    // const context = new AudioContext();
+    // var mediaSource = new MediaSource()
+    // video.src = URL.createObjectURL(mediaSource)
+    //     var sourcebuffer
+    //     mediaSource.addEventListener('sourceopen',function(){
+    //         sourcebuffer = mediaSource.addSourceBuffer('video/webm; codecs=vp8')
+    //         //console.log(sourcebuffer)
+    //     })
+          
+    //websocket.binaryType = "blob";
+    websocket.addEventListener('open',(e) => {
+        console.log('open')
+        
+        document.getElementById('screen1').onclick=function(){
+        navigator.mediaDevices
+            .getDisplayMedia({ audio: true, video: true })
+            .then(stream => {
+                video.srcObject=stream
+                video.play()
+
+
+
+                if( window.MediaStreamTrackProcessor ) {
+                    
+                    const canvas = document.querySelector("canvas");
+                    const ctx = canvas.getContext("2d");
+                    const track = video.captureStream().getVideoTracks()[0] // MediaStream.getVideoTracks()[0]
+                    const processor = new MediaStreamTrackProcessor( track );
+                    const reader = processor.readable.getReader();
+                    //console.log(processor)
+                    readChunk();
+                    function readChunk() {
+                        reader.read().then( ({ done, value }) => {
+                            console.log(value,done)
+                            //console.log(reader)
+                        // the MediaStream video can have dynamic size
+                        if( canvas.width !== value.displayWidth || canvas.height !== value.displayHeight ) {
+                            canvas.width = value.displayWidth;
+                            canvas.height = value.displayHeight;
+                        }
+                        ctx.clearRect( 0, 0, canvas.width, canvas.height );
+                        // value is a VideoFrame
+                        //console.log(value)
+                        ctx.drawImage( value, 0, 0 );
+                        value.close(); // close the VideoFrame when we're done with it
+                        if( !done ) {
+                            readChunk();
+                        }
+                        });
+                    }
+                    }
+
+// We can't use getUserMedia in StackSnippets
+// So here we use a simple canvas as source
+// for our MediaStream.
+function getCanvasTrack() {
+  // just some noise...
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  //const img = new ImageData(300, 150);
+  //const data = new Uint32Array(img.data.buffer);
+
+
+
+  //anim();
+  
+  return track;
+  
+//   function anim() {
+//       //console.log(data)
+//     for( let i=0; i<data.length;i++ ) {
+//       data[i] = Math.random() * 0xFFFFFF + 0xFF000000;
+//       //console.log(data)
+//     }
+//     ctx.putImageData(img, 0, 0);
+//     if( track.readyState === "live" ) {
+//       requestAnimationFrame(anim);
+//     }
+//   }
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                //video.style.display="none"
+                // const mediarecorder = new MediaRecorder(stream)
+                // const ctx = canvas.getContext('2d');
+
+                // const WIDTH = 256;
+                // const HEIGHT = 256;
+                // mediarecorder.ondataavailable = async function (e) {
+                //     if (e.data.size > 0) {
+                //         const arrayBuffer = await new Response(e.data).arrayBuffer();
+                //         //console.log(arrayBuffer)
+                //         const pixels = new Uint8ClampedArray(arrayBuffer);
+                //         console.log(pixels)
+                //         for (let y = 0; y < HEIGHT; y++) {
+                //         for (let x = 0; x < WIDTH; x++) {
+                //             const i = (y*WIDTH + x) * 4;
+                //             pixels[i  ] = x;   // red
+                //             pixels[i+1] = y;   // green
+                //             pixels[i+2] = 0;   // blue
+                //             pixels[i+3] = 255; // alpha
+                //         }
+                //         }
+
+                //         const imageData = new ImageData(pixels, 100, 100);
+                //         console.log(imageData)
+                //         ctx.putImageData(imageData, 0, 0);
+                //     }  
+                // }
+                // mediarecorder.start(200);
+                // var ctx = canvas.getContext('2d')
+                // setInterval(begin,1)
+                // function begin(){
+                //     draw()
+                //     read()
+                // }
+
+                // function draw(){
+                //     canvas.width = video.videoWidth
+                //     canvas.height = video.videoHeight
+                //     ctx.drawImage(video,0,0,canvas.width,canvas.height)
+                //     //document.getElementById('video1').play()
+                //     canvas.style.display='none'
+                //     //window.requestAnimationFrame(draw)
+                // }
+
+                // async function read(){
+                //     var stream1 = video.captureStream(30)
+                //     //console.log(stream1)
+                //     //document.getElementById('video1').srcObject=stream1
+                //     var canvasData = canvas.toDataURL('image/gif',1)
+                //     var decode = atob(canvasData.split(',')[1])
+                //     var charArray=[]
+                //     for (var i=0;i<decode.length;i++){
+                //         charArray.push(decode.charCodeAt(i))
+
+
+                //     }
+                //    var res =  await new Blob([new Uint8Array(charArray)],{'type':"image/gif"}).arrayBuffer()
+                //    const pixels = new Uint8ClampedArray(res);
+
+                //     const imageData = new ImageData(pixels, 100, 100);
+                //     ctx.putImageData(imageData, 0, 0);
+                //     //websocket.send()
+                // }
+
+                // FOR  AUDIO
+                // const context = new AudioContext();
+                // const source = context.createMediaStreamSource(stream);
+                // const processor = context.createScriptProcessor(16384, 2, 2);
+
+                // source.connect(processor);
+                // processor.connect(context.destination);
+                // processor.onaudioprocess = function(e) {
+                //     var abc = "hello"+" "+e.inputBuffer.getChannelData(0)
+                //     websocket.send(abc)
+                // }
+                
+
+             }); 
+             //video.play() 
+            }     
+    })
+
+
+    websocket.addEventListener('message',(e)=>{
+        console.log(e.data)
+        video.style.display='none'
+        canvas.style.display='none'
+        var img = document.getElementById('screen')
+        img.src=window.URL.createObjectURL(e.data)
+        var video1 = document.getElementById('video1')
+        video1.src=window.URL.createObjectURL(e.data)
+        video1.play()
+        // var reader = new FileReader()
+        // reader.onload=function(e){
+        //     //console.log(e.target.result)
+        //     sourcebuffer.appendBuffer(new Uint8Array(e.target.result))
+        //     //console.log(sourcebuffer)
+        // }
+        // reader.readAsArrayBuffer(e.data)
+
+        // var media,sourceBuffer
+        // var buffer = e.data
+        // var data = new Uint8Array(buffer)
+        // //console.log(data)
+        // // if(data[0]===26&&data[1]===69&&data[2]===223){
+            
+        //     if(media){
+        //         URL.revokeObjectURL(media)
+        //         sourceBuffer=null;  
+        //             }
+            
+        //     media= new MediaSource();
+
+        //     //console.log(media)
+        //     video.src = URL.createObjectURL(media);
+        //     video.onloadedmetadata=function(){
+                
+        //         video.muted=true
+        //         video.play()
+        //     }
+            
+        //     media.onsourceopen=function(){
+                
+        //         sourceBuffer= media.addSourceBuffer("video/webm;codecs=opus, vp8");
+        //         sourceBuffer.appendBuffer(data)
+        //         sourceBuffer.addEventListener('updateend', () => {
+        //             console.log(media.readyState); 
+        //             media.endOfStream();
+        //             video.play();
+        //             console.log(media.readyState); // ended
+        //         });
+
+                
+        //     }
+    
+        // }
+        
+        // else {
+        // if(!media)//console.log(media); 
+        // return;
+        //     console.log(sourceBuffer)
+        //     sourceBuffer.appendBuffer(buffer)
+            
+        // }
+                           
+        // let rawbuffer = new Float32Array (e.data)
+        // var playSound = context.createBufferSource();
+        // let audioBuffer = context.createBuffer(1, rawbuffer.length, 48000)
+        // audioBuffer.copyToChannel( rawbuffer, 0);
+        // playSound.buffer = audioBuffer
+        // playSound.connect(context.destination);
+        // playSound.start(context.currentTime);
+
+
+
+    })
+    websocket.addEventListener('close',(e)=>{
+        console.log('close')
+    })
+    websocket.addEventListener('error',(e)=>{
+        console.log('error',e)
+    })
+
+</script>
+</html>
