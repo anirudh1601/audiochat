@@ -14,10 +14,10 @@
 </style>
 <body>
     <h1>hello</h1>
-    <video id="video" width="300" height="200" autoplay controls  ></video>
+    <video id="video" width="300" height="200" autoplay   ></video>
     <canvas id="canvas" width="300" height="200"></canvas>
-    <!-- <img id="screen" height="300" width="300"/>
-    <video id="video1"></video> -->
+    <!-- <img id="screen" height="300" width="300"/>-->
+    <video id="video1"></video> 
     <button id="screen1">screen</button>
 </body>
 <script >
@@ -51,78 +51,189 @@
     //         //console.log(sourcebuffer)
     //     })
           
-    //websocket.binaryType = "blob";
+    websocket.binaryType = "arraybuffer";
     websocket.addEventListener('open',(e) => {
         console.log('open')
+        document.getElementById('screen1').onclick = function (){
         
-        document.getElementById('screen1').onclick=function(){
-        navigator.mediaDevices
-            .getDisplayMedia({ audio: true, video: true })
-            .then(stream => {
-                video.srcObject=stream
-                video.play()
+    const framerate = 30;
+  const bitrate = 200;
+  const width = 400;
+  const height = 400;
 
-
-
-                if( window.MediaStreamTrackProcessor ) {
-                    
-                    const canvas = document.querySelector("canvas");
-                    const ctx = canvas.getContext("2d");
-                    const track = video.captureStream().getVideoTracks()[0] // MediaStream.getVideoTracks()[0]
-                    const processor = new MediaStreamTrackProcessor( track );
-                    const reader = processor.readable.getReader();
-                    //console.log(processor)
-                    readChunk();
-                    function readChunk() {
-                        reader.read().then( ({ done, value }) => {
-                            console.log(value,done)
-                            //console.log(reader)
-                        // the MediaStream video can have dynamic size
-                        if( canvas.width !== value.displayWidth || canvas.height !== value.displayHeight ) {
-                            canvas.width = value.displayWidth;
-                            canvas.height = value.displayHeight;
-                        }
-                        ctx.clearRect( 0, 0, canvas.width, canvas.height );
-                        // value is a VideoFrame
-                        //console.log(value)
-                        ctx.drawImage( value, 0, 0 );
-                        value.close(); // close the VideoFrame when we're done with it
-                        if( !done ) {
-                            readChunk();
-                        }
-                        });
-                    }
-                    }
-
-// We can't use getUserMedia in StackSnippets
-// So here we use a simple canvas as source
-// for our MediaStream.
-function getCanvasTrack() {
-  // just some noise...
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  //const img = new ImageData(300, 150);
-  //const data = new Uint32Array(img.data.buffer);
-
-
-
-  //anim();
-  
-  return track;
-  
-//   function anim() {
-//       //console.log(data)
-//     for( let i=0; i<data.length;i++ ) {
-//       data[i] = Math.random() * 0xFFFFFF + 0xFF000000;
-//       //console.log(data)
-//     }
-//     ctx.putImageData(img, 0, 0);
-//     if( track.readyState === "live" ) {
-//       requestAnimationFrame(anim);
-//     }
+//   function createBufferURL(buffer, type = '') {
+//     return URL.createObjectURL(new Blob([buffer], {type}));
 //   }
-  
+
+//   function cameraStream({ width, height }) {
+//     return new ReadableStream({
+//       async start(controller) {
+//         const cvs = document.createElement("canvas");
+//         const video = document.createElement("video");
+//         const stream = await navigator.mediaDevices.getDisplayMedia({
+//           video: {
+//             width: { ideal: width },
+//             height: { ideal: height }
+//           },
+//           audio: false
+//         });
+//         video.srcObject = stream;
+//         video.play();
+//         await nextEvent(video, "playing");
+//         [cvs.width, cvs.height] = [width, height];
+//         const ctx = cvs.getContext("2d");
+//         const frameTimeout = 1000 / framerate;
+//         setTimeout(async function f() {
+//           ctx.drawImage(video, 0, 0);
+//           await controller.enqueue(
+//             ctx.getImageData(0, 0, width, height)
+//           );
+//           setTimeout(f, frameTimeout);
+//         }, frameTimeout);
+//       }
+//     });
+//   }
+
+//   // Returns the next <name> event of `target`.
+//   function nextEvent(target, name) {
+//     return new Promise(resolve => {
+//       target.addEventListener(name, resolve, { once: true });
+//     });
+//   }
+
+//   async function init() {
+//     const buffer = await fetch(
+//   "https://unpkg.com/webm-wasm@0.4.1/dist/webm-worker.js"
+// ).then(r => r.arrayBuffer());
+// const worker = new Worker(
+//   URL.createObjectURL(new Blob([buffer], { type: "text/javascript" }))
+// );
+// worker.postMessage("https://unpkg.com/webm-wasm@0.4.1/dist/webm-wasm.wasm");
+
+//     await nextEvent(worker, "message");
+//     worker.postMessage({
+//       timebaseDen: 30,
+//       width,
+//       height,
+//       realtime: true
+//     });
+//     cameraStream({width, height})
+//       .pipeTo(new WritableStream({
+//         write(image) {
+//             console.log(image.data.buffer)
+//           worker.postMessage(image.data.buffer, [image.data.buffer]);
+//           //console.log(image.data.buffer)
+//         }
+//       }));
+
+//     // const mediaSource = new MediaSource();
+//     // mediaSource.onsourceopen = () => {
+//     //   const sourceBuffer = mediaSource.addSourceBuffer(`video/webm; codecs="vp8"`);
+//       worker.onmessage = ev => {
+//         if(!ev.data) {
+//           return mediaSource.endOfStream();
+//         }
+//         websocket.send(ev.data)
+//     //     sourceBuffer.appendBuffer(ev.data);
+//     //   };
+//     };
+
+//     // //const video = document.createElement("video");
+//     // var video1 = document.getElementById('video1')
+//     // video1.muted = true;
+//     // video1.autoplay = true;
+//     // //video.loop = true;
+//     // //video.controls = true;
+//     // video1.src = URL.createObjectURL(mediaSource);
+//     // //document.body.append(video);
+//     // video1.play();
+//   }
+
+//   document.getElementById('screen1').onclick = ev => {
+//     ev.target.remove();
+//     init();
+//   };
+async function stream(){
+var stream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            width: { ideal: width },
+            height: { ideal: height }
+          },
+          audio: false
+        })
+        video.scrObject=stream
+        video.play()
+               const recorder =  new MediaRecorder(stream)
+               console.log(recorder)
+                recorder.ondataavailable = async function (e){
+                    var blob = e.data 
+                    var abc = await blob.arrayBuffer()    
+                    websocket.send(abc)
+                }
+                recorder.start(1000)
 }
+document.getElementById('screen1').onclick=()=>{
+  stream()
+}
+//                 if( window.MediaStreamTrackProcessor ) {
+                    
+//                     const canvas = document.querySelector("canvas");
+//                     const ctx = canvas.getContext("2d");
+//                     const track = video.captureStream().getVideoTracks()[0] // MediaStream.getVideoTracks()[0]
+//                     const processor = new MediaStreamTrackProcessor( track );
+//                     const reader = processor.readable.getReader();
+//                     //console.log(processor)
+//                     readChunk();
+//                     function readChunk() {
+//                         reader.read().then( ({ done, value }) => {
+//                             console.log(typeof(value))
+//                             //console.log(reader)
+//                         // the MediaStream video can have dynamic size
+//                         if( canvas.width !== value.displayWidth || canvas.height !== value.displayHeight ) {
+//                             canvas.width = value.displayWidth;
+//                             canvas.height = value.displayHeight;
+//                         }
+//                         ctx.clearRect( 0, 0, canvas.width, canvas.height );
+//                         // value is a VideoFrame
+//                         //console.log(value)
+//                         ctx.drawImage( value, 0, 0 );
+//                         value.close(); // close the VideoFrame when we're done with it
+//                         if( !done ) {
+//                             readChunk();
+//                         }
+//                         });
+//                     }
+//                     }
+
+// // We can't use getUserMedia in StackSnippets
+// // So here we use a simple canvas as source
+// // for our MediaStream.
+// function getCanvasTrack() {
+//   // just some noise...
+//   const canvas = document.createElement("canvas");
+//   const ctx = canvas.getContext("2d");
+//   //const img = new ImageData(300, 150);
+//   //const data = new Uint32Array(img.data.buffer);
+
+
+
+//   //anim();
+  
+//   return track;
+  
+// //   function anim() {
+// //       //console.log(data)
+// //     for( let i=0; i<data.length;i++ ) {
+// //       data[i] = Math.random() * 0xFFFFFF + 0xFF000000;
+// //       //console.log(data)
+// //     }
+// //     ctx.putImageData(img, 0, 0);
+// //     if( track.readyState === "live" ) {
+// //       requestAnimationFrame(anim);
+// //     }
+// //   }
+  
+// }
 
 
 
@@ -213,22 +324,33 @@ function getCanvasTrack() {
                 //     websocket.send(abc)
                 // }
                 
-
-             }); 
+                }
              //video.play() 
-            }     
+               
     })
 
+    const mediaSource = new MediaSource();
+    var sourceBuffer
+    var video1 = document.getElementById('video1')
+    video1.muted = true;
+    //video1.autoplay = true;
+    //video.loop = true;
+    //video.controls = true;
+    video1.src = URL.createObjectURL(mediaSource);
+    video1.play()
+    mediaSource.onsourceopen = () => {
+        sourceBuffer = mediaSource.addSourceBuffer("video/webm;codecs=vp8");
 
+    }
     websocket.addEventListener('message',(e)=>{
-        console.log(e.data)
-        video.style.display='none'
-        canvas.style.display='none'
-        var img = document.getElementById('screen')
-        img.src=window.URL.createObjectURL(e.data)
-        var video1 = document.getElementById('video1')
-        video1.src=window.URL.createObjectURL(e.data)
-        video1.play()
+        //console.log(e.data)
+        if(!e.data) {
+          return mediaSource.endOfStream();
+        }
+        sourceBuffer.appendBuffer(e.data);
+        //console.log(sourceBuffer)
+        //console.log(sourceBuffer)
+    
         // var reader = new FileReader()
         // reader.onload=function(e){
         //     //console.log(e.target.result)

@@ -3,9 +3,8 @@ from channels.consumer import AsyncConsumer
 import json
 from asgiref.sync import async_to_sync
 import base64
-import io
-import numpy as np
-
+import subprocess
+ffmpeg_proc = subprocess.Popen('ffmpeg -y -f webm -i - -ac 1 -ar 16000  -f wav /tmp/out.wav', shell=True, stdin=subprocess.PIPE)
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -28,6 +27,8 @@ class ChatConsumer(WebsocketConsumer):
     def receive(self,text_data=None, bytes_data=None):
         #print(event)
         my_string =bytes_data
+
+        #print(my_string)
         #print(text_data)
         #print(len(my_string))
         #print(my_string)
